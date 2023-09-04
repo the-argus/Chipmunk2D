@@ -148,7 +148,11 @@ pub fn build(b: *std.Build) !void {
     lib.addCSourceFiles(&c_sources, flags.items);
 
     // always install chipmunk headers
-    lib.installHeader("include/chipmunk", "chipmunk");
+    for (headers) |header| {
+        const full_header_path = std.fs.path.join(b.allocator, &.{ header_dir, header }) catch @panic("OOM");
+        const full_install_path = std.fs.path.join(b.allocator, &.{ header_installation_dir, header }) catch @panic("OOM");
+        lib.installHeader(full_header_path, full_install_path);
+    }
 
     for (targets.items) |t| {
         b.installArtifact(t);
