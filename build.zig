@@ -44,11 +44,6 @@ const c_sources = [_][]const u8{
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const mode = b.standardOptimizeOption(.{});
-
-    _ = try addLib(b, target, mode);
-}
-
-pub fn addLib(b: *std.Build, target: std.zig.CrossTarget, mode: std.builtin.OptimizeMode) !*std.Build.CompileStep {
     var targets = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
 
     const lib = b.addStaticLibrary(.{
@@ -129,8 +124,6 @@ pub fn addLib(b: *std.Build, target: std.zig.CrossTarget, mode: std.builtin.Opti
     }
 
     zcc.createStep(b, "cdb", try targets.toOwnedSlice());
-
-    return lib;
 }
 
 fn link(
