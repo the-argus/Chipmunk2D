@@ -41,6 +41,41 @@ const c_sources = [_][]const u8{
     "src/cpSweep1D.c",
 };
 
+const header_dir = "include/chipmunk/";
+const header_installation_dir = "chipmunk/";
+const headers = [_][]const u8{
+    "chipmunk.h",
+    "chipmunk_ffi.h",
+    "chipmunk_private.h",
+    "chipmunk_structs.h",
+    "chipmunk_types.h",
+    "chipmunk_unsafe.h",
+    "cpArbiter.h",
+    "cpBB.h",
+    "cpBody.h",
+    "cpConstraint.h",
+    "cpDampedRotarySpring.h",
+    "cpDampedSpring.h",
+    "cpGearJoint.h",
+    "cpGrooveJoint.h",
+    "cpHastySpace.h",
+    "cpMarch.h",
+    "cpPinJoint.h",
+    "cpPivotJoint.h",
+    "cpPolyline.h",
+    "cpPolyShape.h",
+    "cpRatchetJoint.h",
+    "cpRobust.h",
+    "cpRotaryLimitJoint.h",
+    "cpShape.h",
+    "cpSimpleMotor.h",
+    "cpSlideJoint.h",
+    "cpSpace.h",
+    "cpSpatialIndex.h",
+    "cpTransform.h",
+    "cpVect.h",
+};
+
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const mode = b.standardOptimizeOption(.{});
@@ -113,11 +148,11 @@ pub fn build(b: *std.Build) !void {
     lib.addCSourceFiles(&c_sources, flags.items);
 
     // always install chipmunk headers
-    b.installDirectory(.{
-        .source_dir = std.Build.FileSource{ .path = "include" },
-        .install_dir = .header,
-        .install_subdir = "",
-    });
+    for (headers) |header| {
+        const full_header_path = std.fs.path.join(b.allocator, &.{ header_dir, header }) catch @panic("OOM");
+        const full_install_path = std.fs.path.join(b.allocator, &.{ header_installation_dir, header }) catch @panic("OOM");
+        lib.installHeader(full_header_path, full_install_path);
+    }
 
     for (targets.items) |t| {
         b.installArtifact(t);
