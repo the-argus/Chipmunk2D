@@ -58,3 +58,7 @@ msvc/vc14/demo/x64/
 *.db
 
 .vscode
+
+compile_commands.json
+zig-out/
+zig-cache/
