@@ -53,6 +53,10 @@ pub fn build(b: *std.Build) !void {
     });
     try targets.append(lib);
 
+    if (b.option(bool, "use_doubles", "Use double precision floating point values")) |use_doubles| {
+        lib.defineCMacro("CP_USE_DOUBLES", if (use_doubles) "1" else "0");
+    }
+
     // copied from chipmunk cmake. may be redundant with zig default flags
     // also the compiler is obviously never msvc so idk if the if is necessary
     var flags = std.ArrayList([]const u8).init(b.allocator);
