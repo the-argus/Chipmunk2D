@@ -19,7 +19,6 @@ const c_sources = [_][]const u8{
     "src/cpGearJoint.c",
     "src/cpGrooveJoint.c",
     "src/cpHashSet.c",
-    "src/cpHastySpace.c",
     "src/cpMarch.c",
     "src/cpPinJoint.c",
     "src/cpPivotJoint.c",
