@@ -43,7 +43,7 @@ const c_sources = [_][]const u8{
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const mode = b.standardOptimizeOption(.{});
-    var targets = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
+    var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
 
     const lib = b.addStaticLibrary(.{
         .name = app_name,
@@ -59,20 +59,20 @@ pub fn build(b: *std.Build) !void {
     // copied from chipmunk cmake. may be redundant with zig default flags
     // also the compiler is obviously never msvc so idk if the if is necessary
     var flags = std.ArrayList([]const u8).init(b.allocator);
-    if (lib.target.getAbi() != .msvc) {
-        try flags.appendSlice(&.{ "-fblocks", "-std=gnu99" });
-        if (builtin.mode != .Debug) {
-            try flags.append("-ffast-math");
-        } else {
-            try flags.append("-Wall");
-        }
+    //if (lib.rootModuleTarget().getAbi() != .msvc) {
+    try flags.appendSlice(&.{ "-fblocks", "-std=gnu99" });
+    if (builtin.mode != .Debug) {
+        try flags.append("-ffast-math");
+    } else {
+        try flags.append("-Wall");
     }
+    //}
 
     // universal includes / links
-    try include(targets, "include");
+    try include(b, targets, "include");
     try link(targets, "m");
 
-    switch (target.getOsTag()) {
+    switch (target.result.os.tag) {
         .wasi, .emscripten => {
             std.log.info("building for emscripten\n", .{});
 
@@ -90,7 +90,7 @@ pub fn build(b: *std.Build) !void {
             lib.defineCMacro("PLATFORM_WEB", null);
 
             // run emranlib
-            const emranlib_file = switch (b.host.target.os.tag) {
+            const emranlib_file = switch (b.graph.host.result.os.tag) {
                 .windows => "emranlib.bat",
                 else => "emranlib",
             };
@@ -113,10 +113,16 @@ pub fn build(b: *std.Build) !void {
         },
     }
 
-    lib.addCSourceFiles(&c_sources, flags.items);
+    lib.addCSourceFiles(.{
+        .files = &c_sources,
+        .flags = flags.items,
+    });
 
     // always install chipmunk headers
-    lib.installHeadersDirectory("include/chipmunk", "chipmunk");
+    lib.installHeadersDirectory(.{ .src_path = .{
+        .owner = b,
+        .sub_path = "include/chipmunk",
+    } }, "chipmunk", .{});
 
     for (targets.items) |t| {
         b.installArtifact(t);
@@ -126,7 +132,7 @@ pub fn build(b: *std.Build) !void {
 }
 
 fn link(
-    targets: std.ArrayList(*std.Build.CompileStep),
+    targets: std.ArrayList(*std.Build.Step.Compile),
     lib: []const u8,
 ) !void {
     for (targets.items) |target| {
@@ -135,10 +141,11 @@ fn link(
 }
 
 fn include(
-    targets: std.ArrayList(*std.Build.CompileStep),
+    b: *std.Build,
+    targets: std.ArrayList(*std.Build.Step.Compile),
     path: []const u8,
 ) !void {
     for (targets.items) |target| {
-        target.addIncludePath(.{ .path = path });
+        target.addIncludePath(.{ .src_path = .{ .owner = b, .sub_path = path } });
     }
 }
