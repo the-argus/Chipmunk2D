@@ -61,5 +61,5 @@ msvc/vc14/demo/x64/
 
 compile_commands.json
 zig-out/
-zig-cache/
+.zig-cache/
 .cache/
